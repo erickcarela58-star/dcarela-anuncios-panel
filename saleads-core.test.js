@@ -97,3 +97,70 @@ test("embudo suma etapas e ingreso confirmado", () => {
   assert.equal(result.booking, 1);
   assert.equal(result.revenue, 3500);
 });
+
+test("asigna identificadores deterministas por sucursal", () => {
+  const capacity = { date: "2026-09-01", service: "Maternidad Estudio", slots: 4, reserved: 1, updated_at: "2026-09-01T10:00:00.000Z" };
+  assert.equal(core.operationDocId("capacity_entries", "biz_1", capacity), "biz-1__2026-09-01__maternidad-estudio");
+  assert.equal(core.operationDocId("capacity_entries", "biz_1", { ...capacity, service: "maternidad  estudio" }), "biz-1__2026-09-01__maternidad-estudio");
+  assert.notEqual(core.operationDocId("capacity_entries", "biz_2", capacity), core.operationDocId("capacity_entries", "biz_1", capacity));
+  assert.equal(core.operationDocId("creative_assets", "biz_1", { id: "asset_17_ab" }), "biz-1__asset-17-ab");
+  assert.throws(() => core.operationDocId("ventas", "biz_1", {}));
+});
+
+test("la migracion a Firestore es idempotente", () => {
+  const local = [
+    { id: "asset_1", created_at: "2026-08-01T00:00:00.000Z" },
+    { id: "asset_2", created_at: "2026-08-02T00:00:00.000Z" },
+  ];
+  const first = core.planOperationMigration("creative_assets", local, [], "biz_1");
+  assert.equal(first.collection, "saleads_assets");
+  assert.equal(first.upload.length, 2);
+  const second = core.planOperationMigration("creative_assets", local, first.upload, "biz_1");
+  assert.equal(second.upload.length, 0);
+  assert.equal(second.already_synced, 2);
+});
+
+test("la capacidad se corrige sin duplicar la jornada", () => {
+  const cloud = [{ id: "capacity_1", date: "2026-09-01", service: "maternidad", slots: 4, reserved: 1, updated_at: "2026-09-01T10:00:00.000Z" }];
+  const local = [{ id: "capacity_2", date: "2026-09-01", service: "Maternidad", slots: 4, reserved: 3, updated_at: "2026-09-01T18:00:00.000Z" }];
+  const plan = core.planOperationMigration("capacity_entries", local, cloud, "biz_1");
+  assert.equal(plan.upload.length, 1);
+  const merged = core.mergeOperationRows("capacity_entries", local, cloud, "biz_1");
+  assert.equal(merged.length, 1);
+  assert.equal(merged[0].reserved, 3);
+});
+
+test("la mezcla conserva lo local pendiente y marca lo confirmado", () => {
+  const local = [
+    { id: "event_1", stage: "lead", created_at: "2026-08-01T00:00:00.000Z" },
+    { id: "event_2", stage: "paid", created_at: "2026-08-03T00:00:00.000Z" },
+  ];
+  const cloud = [{ id: "event_1", stage: "lead", created_at: "2026-08-01T00:00:00.000Z" }];
+  const merged = core.mergeOperationRows("attribution_events", local, cloud, "biz_1");
+  assert.equal(merged.length, 2);
+  assert.equal(merged[0].id, "event_2");
+  assert.equal(merged[0].sync_state, "pending");
+  assert.equal(merged.find((x) => x.id === "event_1").sync_state, "synced");
+});
+
+test("los estados de sincronizacion son explicitos y no borran datos", () => {
+  assert.equal(core.describeSyncError({ code: "permission-denied" }).state, "permission");
+  assert.equal(core.describeSyncError({ code: "resource-exhausted" }).state, "quota");
+  assert.equal(core.describeSyncError({ code: "unavailable" }).state, "offline");
+  assert.equal(core.describeSyncError({ code: "unauthenticated" }).state, "expired");
+  assert.equal(core.describeSyncError(new Error("boom"), { online: false }).state, "offline");
+  assert.equal(core.describeSyncError(new Error("boom")).state, "unknown");
+  for (const state of Object.keys(core.syncStates)) assert.ok(core.syncStateLabel(state).label);
+  const summary = core.summarizeSync("local_only", { rows: 5, pending: 2 });
+  assert.equal(summary.tone, "warning");
+  assert.match(summary.text, /2 pendiente/);
+});
+
+test("la bitacora es append-only y sin datos personales del cliente", () => {
+  const entry = core.auditEntry({ action: "capacity_updated", entity: "saleads_capacity", detail: "x".repeat(400), created_at: "2026-08-23T12:00:00.000Z", actor_email: "duena@dcarela.do" });
+  assert.equal(entry.source, "saleads_panel");
+  assert.equal(entry.detail.length, 300);
+  assert.equal(entry.created_at, "2026-08-23T12:00:00.000Z");
+  assert.ok(entry.id.startsWith("audit_"));
+  assert.equal(core.operationCollections.audit_entries.mode, "append_only");
+});

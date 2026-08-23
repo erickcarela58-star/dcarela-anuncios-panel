@@ -4,6 +4,7 @@ const assert = require("node:assert/strict");
 const html = fs.readFileSync(__dirname + "/index.html", "utf8");
 const js = fs.readFileSync(__dirname + "/app.js", "utf8");
 const css = fs.readFileSync(__dirname + "/styles.css", "utf8");
+const core = require("./saleads-core.js");
 test("es una pagina independiente y enlaza herramientas oficiales", () => {
   assert.match(html, /Centro de Anuncios/);
   for (const host of [
@@ -78,4 +79,36 @@ test("aprobacion humana no equivale a publicar", () => {
   assert.match(html, /no publica, no activa gasto/i);
   assert.ok(js.includes("canTransitionCampaign"));
   assert.ok(js.includes("meta_backend_connected: false"));
+});
+
+test("los modulos operativos se sincronizan por sucursal con estados visibles", () => {
+  assert.equal((html.match(/data-sync-banner/g) || []).length, 5);
+  assert.match(html, /id="auditTrail"/);
+  for (const fn of ["mergeOperationRows", "planOperationMigration", "describeSyncError", "operationDocId"])
+    assert.ok(js.includes(`saleAds.${fn}`));
+  for (const state of ["permission", "quota", "offline", "expired"])
+    assert.ok(core.syncStates[state], `falta el estado ${state}`);
+  assert.ok(js.includes("navigator.onLine"));
+  assert.ok(js.includes("cacheRows"), "debe conservar copia local de respaldo");
+});
+
+test("las reglas de SaleAds son append-only por sucursal y rol", () => {
+  const rules = fs.readFileSync(__dirname + "/firestore.saleads.rules", "utf8");
+  for (const name of ["saleads_assets", "saleads_experiments", "saleads_attribution", "saleads_audit"]) {
+    const block = rules.split(`match /${name}/`)[1].split("match /")[0];
+    assert.match(block, /allow update, delete: if false;/);
+    assert.match(block, /allow create: if saleAdsCreate\(\);/);
+    assert.match(block, /isActiveMember\(resource\.data\.business_id\)/);
+  }
+  const capacity = rules.split("match /saleads_capacity/")[1];
+  assert.match(capacity, /allow update: if keepsBusiness\(\)/);
+  assert.match(capacity, /allow delete: if false;/);
+  assert.match(rules, /isAdmin\(request\.resource\.data\.business_id\)/);
+  assert.match(rules, /created_by_uid == request\.auth\.uid/);
+});
+
+test("la sincronizacion no borra ni sobreescribe datos de otras colecciones", () => {
+  assert.doesNotMatch(js, /deleteDoc|deleteField|writeBatch/);
+  for (const kind of ["saleads_assets", "saleads_capacity", "saleads_experiments", "saleads_attribution", "saleads_audit"])
+    assert.ok(core.operationCollections[Object.keys(core.operationCollections).find((k) => core.operationCollections[k].collection === kind)], kind);
 });

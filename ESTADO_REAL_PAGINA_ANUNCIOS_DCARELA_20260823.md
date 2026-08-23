@@ -117,11 +117,20 @@ separado no resuelva.
 | Borradores/campañas | `crm_campaigns` en Firestore |
 | Aprobación de campaña | Se registra sobre la campaña con UID/correo del actor autorizado |
 | Estado recuperable del wizard | Almacenamiento local por sucursal |
-| Metadatos de creativos v4 | Almacenamiento local por sucursal; el archivo binario no sale del equipo |
-| Capacidad/calendario v4 | Almacenamiento local por sucursal |
-| Experimentos v4 | Almacenamiento local por sucursal |
-| Eventos de atribución v4 | Almacenamiento local por sucursal y marcados `manual_verified` |
+| Metadatos de creativos v4 | `saleads_assets` (append-only) + copia local; el archivo binario no sale del equipo |
+| Capacidad/calendario v4 | `saleads_capacity`, id determinista fecha+servicio, + copia local |
+| Experimentos v4 | `saleads_experiments` (append-only) + copia local |
+| Eventos de atribución v4 | `saleads_attribution` (append-only) + copia local, marcados `manual_verified` |
+| Auditoría de acciones v4 | `saleads_audit` (append-only) + copia local |
 | Métricas/gasto Meta | No existen todavía; no se inventan |
+
+Las cinco colecciones `saleads_*` ya están implementadas en el panel con mezcla
+idempotente, copia local de respaldo y estados explícitos de carga, permiso,
+cuota, sin conexión y sesión vencida. **Todavía no están activas en producción**:
+las reglas correspondientes están escritas y versionadas, pero no publicadas en
+el proyecto Firebase. Mientras eso no ocurra, la lectura llega vacía o la
+escritura devuelve `permission-denied` y el panel sigue operando con la copia
+local, marcando cada registro como pendiente. Ninguna ruta borra datos.
 
 Esto significa que el panel ya es funcional para preparar y controlar trabajo,
 pero los módulos v4 todavía no están disponibles automáticamente en otros
@@ -144,7 +153,8 @@ Firestore con reglas y auditoría, sin borrar la compatibilidad local.
 - ROAS, CPC, CPM, CTR o costo por sesión reales.
 - Generación con IA remota. El motor actual es determinista y no consume API.
 - Sincronización multidispositivo de creativos, capacidad, experimentos y
-  atribución v4.
+  atribución v4 **verificada en producción**: el código y las reglas existen,
+  falta publicar las reglas y repetir el QA autenticado en dos dispositivos.
 
 Ningún botón actual puede gastar dinero ni publicar anuncios. Abrir Ads Manager
 solo lleva al operador al proveedor para revisión manual.
@@ -157,7 +167,7 @@ Comando ejecutado:
 node --test ads-panel.test.js saleads-core.test.js
 ```
 
-Resultado actual: **29/29 aprobadas, 0 fallidas**.
+Resultado actual: **38/38 aprobadas, 0 fallidas**.
 
 Cobertura contractual:
 
@@ -173,19 +183,37 @@ Cobertura contractual:
 - experimento sin falso ganador;
 - embudo e ingreso confirmado;
 - aprobación humana distinta de publicación;
-- bloqueo de Meta y gasto automático.
+- bloqueo de Meta y gasto automático;
+- identificadores deterministas por sucursal;
+- migración local→Firestore idempotente (dos corridas no duplican);
+- capacidad corregida sin duplicar la jornada;
+- mezcla que conserva lo local pendiente y marca lo confirmado;
+- estados explícitos de permiso, cuota, sin conexión y sesión vencida;
+- reglas `saleads_*` append-only por `business_id`, membresía y rol.
 
 ## 7. Próximas fases recomendadas
 
 ### P0 — datos v4 compartidos y confiables
 
-1. Diseñar colecciones append-only para activos, capacidad, experimentos,
-   atribución y auditoría.
-2. Publicar reglas Firestore por `business_id`, membresía y rol.
-3. Migrar almacenamiento local a Firestore de forma idempotente y conservar
-   fallback offline.
-4. Estados explícitos de carga, permiso, cuota, sin red y sesión vencida.
-5. Resolver el CNAME `anuncios` y validar certificado/HTTPS.
+1. ~~Diseñar colecciones append-only para activos, capacidad, experimentos,
+   atribución y auditoría.~~ Hecho: `saleads_assets`, `saleads_capacity`,
+   `saleads_experiments`, `saleads_attribution` y `saleads_audit`.
+2. Reglas Firestore por `business_id`, membresía y rol: **escritas y probadas
+   por contrato, pendientes de publicar** en el proyecto Firebase. El fragmento
+   rector está en `firestore.saleads.rules` y aplicado en el `firestore.rules`
+   del repositorio `dcarela-panel`. Esta máquina no tiene Firebase CLI
+   autenticada, así que la publicación exige la consola o una sesión CLI.
+3. ~~Migrar almacenamiento local a Firestore de forma idempotente y conservar
+   fallback offline.~~ Hecho: plan de migración por identificador determinista,
+   mezcla sin duplicados y copia local que nunca se borra.
+4. ~~Estados explícitos de carga, permiso, cuota, sin red y sesión vencida.~~
+   Hecho: bandera de estado en las cinco vistas operativas, con reintento
+   manual y reacción a `online`/`offline`.
+5. Resolver el CNAME `anuncios` y validar certificado/HTTPS. Sigue pendiente en
+   HostGator; verificado hoy: NXDOMAIN en 1.1.1.1.
+6. Pendiente inmediato: publicar las reglas y repetir el QA autenticado
+   escribiendo un activo, una jornada, un experimento y un evento desde dos
+   dispositivos distintos.
 
 ### P1 — conexión real con ventas
 

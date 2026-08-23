@@ -1116,3 +1116,29 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+
+.sync-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
+  border-radius: 14px;
+  background: rgba(148, 163, 184, 0.08);
+}
+.sync-banner small {
+  flex: 1 1 240px;
+  min-width: 0;
+  opacity: 0.85;
+}
+.sync-banner button {
+  margin-left: auto;
+}
+.muted-text {
+  opacity: 0.75;
+}
+@media (max-width: 760px) {
+  .sync-banner button { margin-left: 0; }
+}

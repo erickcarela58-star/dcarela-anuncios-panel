@@ -37,3 +37,42 @@
 - OAuth, Insights, CAPI, publicación PAUSED y gasto Meta siguen sin existir y
   bloqueados por diseño.
 - Documento rector: `ESTADO_REAL_PAGINA_ANUNCIOS_DCARELA_20260823.md`.
+
+### 2026-08-23 — P0: colecciones compartidas, reglas y estados de sincronización
+
+- Punto de partida: `256aec7` en `main`, worktree limpio, 29/29 pruebas.
+- Motor (`saleads-core.js`): se agregó la capa pura de sincronización con
+  `operationCollections`, `operationDocId`, `mergeOperationRows`,
+  `planOperationMigration`, `syncStates`, `describeSyncError`, `summarizeSync`
+  y `auditEntry`. Ninguna función borra ni edita registros existentes.
+- Colecciones: `saleads_assets`, `saleads_capacity`, `saleads_experiments`,
+  `saleads_attribution` y `saleads_audit`. Todas append-only salvo la capacidad,
+  que usa identificador determinista `sucursal__fecha__servicio` para corregir
+  una jornada sin duplicarla.
+- Panel (`app.js`): la copia local pasó de ser el almacén a ser respaldo. Al
+  entrar se pinta lo local, se leen las colecciones por `business_id`, se
+  mezcla, se suben solo los registros ausentes en la nube y se marcan como
+  `synced`. Repetir la operación no duplica nada.
+- Estados visibles en las cinco vistas operativas: cargando, sincronizado,
+  solo en este dispositivo, permiso insuficiente, cuota agotada, sin conexión y
+  sesión vencida, con botón de reintento y escucha de `online`/`offline`.
+- Auditoría: cada alta de activo, capacidad, experimento, evento de atribución
+  y cada aprobación escribe una entrada append-only en `saleads_audit`, visible
+  en la vista de Aprobaciones con su estado de sincronización.
+- Reglas: se agregaron los cinco bloques a `firestore.rules` del repositorio
+  `dcarela-panel` (lectura para miembro activo de la sucursal, creación solo
+  owner/admin con `created_by_uid` propio, sin update ni delete salvo la
+  corrección de capacidad). Copia auditable en `firestore.saleads.rules`.
+- Pruebas: `node --test ads-panel.test.js saleads-core.test.js` → 38/38
+  aprobadas, 0 fallidas.
+- Verificación visual local (http://localhost:5610): cinco banderas de estado
+  presentes, bitácora renderizada, sin scroll horizontal en 1280 y en 390×844.
+  No se pudo capturar imagen porque el panel del navegador no estaba visible.
+- Límite externo 1: las reglas **no están publicadas**. Hasta publicarlas la
+  escritura devuelve `permission-denied` y el panel opera con la copia local
+  marcando pendientes. No hay Firebase CLI autenticada en esta máquina.
+- Límite externo 2: `anuncios.dcarelacompufoto.com` sigue en NXDOMAIN (1.1.1.1).
+- No se ejecutó QA autenticado contra Firestore real en esta sesión; queda
+  pendiente junto con la publicación de las reglas.
+- Siguiente paso: publicar reglas, QA autenticado en dos dispositivos y recién
+  entonces avanzar a P1 (capacidad y atribución enlazadas al POS).

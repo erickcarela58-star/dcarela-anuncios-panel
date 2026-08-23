@@ -21,6 +21,10 @@ Estado real, límites y próximas fases:
 - Experimentos control/variante con umbral mínimo y resultado `insufficient_data` cuando falta señal.
 - Embudo manual verificable desde lead hasta venta pagada, sin inventar Insights ni ROAS.
 - Cola de QA y aprobación humana auditada; la aprobación local no publica ni activa Meta.
+- Colecciones compartidas por sucursal `saleads_assets`, `saleads_capacity`,
+  `saleads_experiments`, `saleads_attribution` y `saleads_audit`, append-only,
+  con copia local de respaldo, migración idempotente y estados explícitos de
+  permiso, cuota, sin conexión y sesión vencida.
 
 SaleAds no contiene tokens de Meta o IA, no activa anuncios, no aumenta presupuestos y no envía el banco de clientes a proveedores publicitarios o generativos.
 
@@ -40,5 +44,9 @@ GitHub Pages publica `main`. Antes de push se deben ejecutar las pruebas, increm
 ## Límites conocidos
 
 - Meta OAuth, Insights, CAPI, webhooks, publicación PAUSED y activación requieren backend seguro y no están implementados.
+- Las reglas de las colecciones `saleads_*` están en `firestore.saleads.rules` y
+  aplicadas al `firestore.rules` del repositorio `dcarela-panel`, pero todavía
+  no se publican en el proyecto Firebase: hasta entonces la escritura responde
+  `permission-denied` y el panel trabaja con la copia local marcando pendientes.
 - Las dimensiones conservadoras de `creativeSpecs` tienen estado `baseline_requires_authenticated_recheck`: Meta bloqueó la verificación pública sin sesión; deben revalidarse antes de publicar un anuncio.
 - Insights y gasto remoto siguen vacíos hasta conectar Meta. El embudo propio acepta solamente eventos comerciales que el usuario registra como verificados.
