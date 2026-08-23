@@ -30,3 +30,32 @@ test("incluye scroll y diseño movil", () => {
   assert.match(css, /overflow:\s*auto/);
   assert.match(css, /@media\s*\(max-width:\s*760px\)/);
 });
+test("incluye wizard rector recuperable y ocho pasos", () => {
+  assert.match(html, /id="wizardForm"/);
+  assert.equal((html.match(/data-wizard-step="\d"/g) || []).length, 8);
+  assert.ok(js.includes("dcarela_saleads_wizard_v3"));
+  assert.ok(js.includes("saveWizard"));
+  assert.ok(js.includes("restoreWizard"));
+});
+test("mantiene el constructor clásico como rollback funcional", () => {
+  assert.match(html, /data-view="builder">Constructor clásico/);
+  assert.ok(js.includes("generatePackage"));
+  assert.ok(js.includes('get("saleads_ui") === "classic"'));
+});
+test("no presenta Meta como conexión o publicación activa", () => {
+  assert.match(html, /Meta aún no conectada/);
+  assert.match(html, /publicación bloqueada/);
+  assert.ok(js.includes('remote_status: "not_connected"'));
+});
+test("usa motor determinista de plantillas, presupuesto, placements y políticas", () => {
+  assert.match(html, /saleads-core\.js/);
+  for (const fn of ["recommendTemplates", "calculateBudget", "lintPolicy", "validatePlacements"])
+    assert.ok(js.includes(`saleAds.${fn}`));
+});
+test("no contiene secretos Meta ni proveedores generativos en frontend", () => {
+  assert.doesNotMatch(html + js, /app_secret|access_token|OPENROUTER_API_KEY|GEMINI_API_KEY/);
+});
+test("no repite identificadores HTML", () => {
+  const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((x) => x[1]);
+  assert.equal(new Set(ids).size, ids.length);
+});
