@@ -9,5 +9,9 @@
 - Implementado: navegación comercial, resumen honesto, wizard de ocho pasos con autosave por sucursal, T01–T12, economía/CAC/capacidad, tres escenarios, registro de placements, linter, revisión bloqueante y borrador compatible.
 - Compatibilidad: constructor anterior conservado y rollback con `?saleads_ui=classic`; `crm_campaigns` se amplía sin migración destructiva.
 - Seguridad: ningún secreto nuevo; no se activa gasto; no se exportan teléfonos; Meta permanece `not_connected`.
-- Verificación pendiente de documentar en esta misma entrada al cerrar el despliegue: commit, Pages run, pruebas y navegador.
+- Publicación separada: commit `918bdbc7e17d25b82352c14c285726660671e73b`; GitHub Pages run `32624822728`, conclusión `success`.
+- Publicación canónica en CRM: commit `80bf989ee31b525d410659bad9e30b3434def336`; GitHub Pages run `32624867876`, conclusión `success`.
+- URL canónica validada: `https://crm.dcarelacompufoto.com/anuncios/`; HTML, núcleo, estilos y Service Worker respondieron HTTP 200.
+- QA: 20/20 pruebas Node. Navegador autenticado cargó 868 clientes y 352 productos/servicios, calculó CAC/capacidad/tres escenarios y bloqueó copy con atributo personal y escasez no comprobada. No se guardó ni publicó una campaña y no se activó gasto.
+- Límite externo: `anuncios.dcarelacompufoto.com` continúa sin DNS. La ruta canónica del CRM permanece operativa y no se tocaron MX/TXT/nameservers.
 - Siguiente fase: Meta OAuth/read-only y preflight mediante backend seguro; no empezar publicación remota hasta tener reglas, roles y recibos idempotentes.

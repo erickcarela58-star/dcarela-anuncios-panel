@@ -48,3 +48,11 @@ Fecha: 2026-08-23
 3. Agregar emulador de reglas Firestore, índices y pruebas cross-business.
 4. Sincronizar Insights read-only y mostrar denominadores, fuente y fecha.
 5. Solo después, diseñar `dry_run` y creación remota `PAUSED`; nunca activar gasto en pruebas.
+
+## Evidencia de cierre de Fase 1
+
+- Repositorio independiente: commit `918bdbc7e17d25b82352c14c285726660671e73b`; Pages `32624822728` en `success`.
+- Espejo canónico dentro del CRM: commit `80bf989ee31b525d410659bad9e30b3434def336`; Pages `32624867876` en `success`.
+- Producción: `https://crm.dcarelacompufoto.com/anuncios/` respondió HTTP 200 para HTML, JavaScript, CSS y Service Worker.
+- Pruebas: 20/20. Navegador autenticado confirmó 868 clientes, 352 productos/servicios, cálculo económico y bloqueos del linter sin guardar ni publicar una campaña.
+- Meta continúa desconectado y el gasto permanece bloqueado por diseño. Las especificaciones creativas conservan el estado `baseline_requires_authenticated_recheck` porque la guía oficial solicitó login durante la comprobación.
