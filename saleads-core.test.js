@@ -55,3 +55,45 @@ test("placements exigen una familia compatible", () => {
 test("registro creativo conserva fuente, fecha y estado de verificación", () => {
   assert.ok(core.creativeSpecs.every((x) => x.source.startsWith("https://") && x.verified_at && x.verification_status));
 });
+
+test("audiencia CRM solo considera exportable el consentimiento explicito vigente", () => {
+  const result = core.summarizeAudience([
+    { phone: "8495550101", marketing_consent: true },
+    { phone: "8495550102" },
+    { phone: "8495550103", marketing_consent: true, marketing_opt_out: true },
+  ]);
+  assert.deepEqual(result, { total: 3, consented: 1, excluded: 1, expired: 0, unknown: 1, contactable: 1, exportable: 1 });
+});
+
+test("QA creativo bloquea personas o menores sin permisos", () => {
+  const result = core.validateCreativeAsset({ name: "Sesion 01", family: "feed_portrait", people_visible: true, contains_minor: true });
+  assert.equal(result.blocked, true);
+  assert.deepEqual(result.issues.filter((x) => x.severity === "block").map((x) => x.code), ["model_release", "guardian_release"]);
+});
+
+test("calendario calcula cupos disponibles sin exceder capacidad", () => {
+  assert.deepEqual(core.capacitySummary([
+    { date: "2026-08-24", slots: 5, reserved: 2 },
+    { date: "2026-08-25", slots: 3, reserved: 9 },
+  ]), { days: 2, slots: 8, reserved: 5, available: 3 });
+});
+
+test("experimento conserva incertidumbre hasta tener señal mínima", () => {
+  const early = core.evaluateExperiment({ minimum_events: 20, control_events: 5, challenger_events: 8, control_spend: 1000, challenger_spend: 1000 });
+  assert.equal(early.decision, "insufficient_data");
+  const enough = core.evaluateExperiment({ minimum_events: 20, control_events: 20, challenger_events: 25, control_spend: 2000, challenger_spend: 1500 });
+  assert.equal(enough.decision, "challenger");
+});
+
+test("máquina de estados bloquea publicación sin backend Meta y aprobación", () => {
+  assert.equal(core.canTransitionCampaign("saved", "qa_ready").ok, true);
+  assert.equal(core.canTransitionCampaign("approved", "publish_paused_requested", { human_approval: true }).ok, false);
+  assert.equal(core.canTransitionCampaign("qa_ready", "approved", { human_approval: true }).ok, true);
+});
+
+test("embudo suma etapas e ingreso confirmado", () => {
+  const result = core.funnelMetrics([{ stage: "lead" }, { stage: "booking" }, { stage: "paid", value: 3500 }]);
+  assert.equal(result.lead, 1);
+  assert.equal(result.booking, 1);
+  assert.equal(result.revenue, 3500);
+});

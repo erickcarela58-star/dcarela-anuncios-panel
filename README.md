@@ -12,6 +12,12 @@ SPA/PWA estática para planificar campañas de fotografía con datos reales del 
 - Registro de familias 4:5, 9:16 y 1:1 con QA de compatibilidad.
 - Linter de atributos personales, escasez/prueba social, releases, HTTPS y precio.
 - Borradores compatibles con `crm_campaigns`, exportación TXT/JSON y constructor clásico.
+- Biblioteca operativa de activos con derechos, vigencia y QA para personas/menores.
+- Audiencias CRM con consentimiento explícito, exclusiones y contactos enmascarados.
+- Calendario de capacidad real para cupos, reservas y disponibilidad vendible.
+- Experimentos control/variante con umbral mínimo y resultado `insufficient_data` cuando falta señal.
+- Embudo manual verificable desde lead hasta venta pagada, sin inventar Insights ni ROAS.
+- Cola de QA y aprobación humana auditada; la aprobación local no publica ni activa Meta.
 
 SaleAds no contiene tokens de Meta o IA, no activa anuncios, no aumenta presupuestos y no envía el banco de clientes a proveedores publicitarios o generativos.
 
@@ -22,7 +28,7 @@ node --test ads-panel.test.js saleads-core.test.js
 Get-Content app.js -Raw | node --input-type=module --check
 ```
 
-El motor puro está en `saleads-core.js`. La interfaz Phase 1 es la predeterminada. Para rollback visual inmediato sin cambiar el despliegue, usar `?saleads_ui=classic`.
+El motor puro está en `saleads-core.js`. La interfaz operativa es la predeterminada. Para rollback visual inmediato sin cambiar el despliegue, usar `?saleads_ui=classic`.
 
 ## Publicación
 
@@ -32,4 +38,4 @@ GitHub Pages publica `main`. Antes de push se deben ejecutar las pruebas, increm
 
 - Meta OAuth, Insights, CAPI, webhooks, publicación PAUSED y activación requieren backend seguro y no están implementados.
 - Las dimensiones conservadoras de `creativeSpecs` tienen estado `baseline_requires_authenticated_recheck`: Meta bloqueó la verificación pública sin sesión; deben revalidarse antes de publicar un anuncio.
-- No hay métricas de campaña ni atribución downstream verificadas; por eso el tablero muestra el estado vacío en lugar de datos ficticios.
+- Insights y gasto remoto siguen vacíos hasta conectar Meta. El embudo propio acepta solamente eventos comerciales que el usuario registra como verificados.

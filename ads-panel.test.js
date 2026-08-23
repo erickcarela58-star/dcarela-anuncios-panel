@@ -59,3 +59,23 @@ test("no repite identificadores HTML", () => {
   const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((x) => x[1]);
   assert.equal(new Set(ids).size, ids.length);
 });
+test("incluye operaciones comerciales completas sin gasto automatico", () => {
+  for (const view of ["viewCalendar", "viewExperiments", "viewAnalytics", "viewApprovals"])
+    assert.match(html, new RegExp(`id="${view}"`));
+  for (const form of ["creativeAssetForm", "capacityForm", "experimentForm", "attributionForm", "approvalForm"])
+    assert.match(html, new RegExp(`id="${form}"`));
+  for (const fn of ["renderCapacity", "renderExperiments", "renderAnalytics", "registerApproval"])
+    assert.ok(js.includes(`function ${fn}`) || js.includes(`async function ${fn}`));
+});
+test("protege datos CRM y consentimiento de audiencias", () => {
+  assert.ok(js.includes("summarizeAudience"));
+  assert.ok(js.includes("consentState"));
+  assert.match(js, /•••-•••-/);
+  assert.doesNotMatch(html, /Exportar teléfonos|Subir lista a Meta/i);
+});
+test("aprobacion humana no equivale a publicar", () => {
+  assert.match(html, /APROBAR BORRADOR/);
+  assert.match(html, /no publica, no activa gasto/i);
+  assert.ok(js.includes("canTransitionCampaign"));
+  assert.ok(js.includes("meta_backend_connected: false"));
+});

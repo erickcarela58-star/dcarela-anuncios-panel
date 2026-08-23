@@ -15,3 +15,12 @@
 - QA: 20/20 pruebas Node. Navegador autenticado cargó 868 clientes y 352 productos/servicios, calculó CAC/capacidad/tres escenarios y bloqueó copy con atributo personal y escasez no comprobada. No se guardó ni publicó una campaña y no se activó gasto.
 - Límite externo: `anuncios.dcarelacompufoto.com` continúa sin DNS. La ruta canónica del CRM permanece operativa y no se tocaron MX/TXT/nameservers.
 - Siguiente fase: Meta OAuth/read-only y preflight mediante backend seguro; no empezar publicación remota hasta tener reglas, roles y recibos idempotentes.
+
+### 2026-08-23 — Panel operativo ampliado v4
+
+- Se amplió SaleAds más allá del esqueleto Fase 1: biblioteca de creativos y derechos, audiencias CRM consentidas, calendario/capacidad, experimentos, atribución propia, campañas filtrables y aprobaciones auditadas.
+- Privacidad: teléfonos enmascarados; consentimiento ausente se trata como no utilizable; opt-out y consentimiento vencido se excluyen.
+- Seguridad: la máquina de estados impide solicitar publicación si `meta_backend_connected=false`; ninguna función crea anuncios, activa gasto, borra campañas o almacena tokens Meta.
+- Persistencia: los módulos operativos nuevos usan almacenamiento local por sucursal; campañas y aprobaciones continúan usando `crm_campaigns` con permisos owner/admin.
+- Pruebas: núcleo ampliado con consentimiento, QA de derechos, capacidad, señal de experimentos, embudo y máquina de estados; navegación visual autenticada validada con datos reales del CRM.
+- Pendiente externo real: OAuth/Insights/CAPI y creación remota PAUSED requieren backend Meta seguro, credenciales y revisión/aprobación correspondientes.
