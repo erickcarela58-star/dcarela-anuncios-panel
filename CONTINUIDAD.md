@@ -24,3 +24,16 @@
 - Persistencia: los módulos operativos nuevos usan almacenamiento local por sucursal; campañas y aprobaciones continúan usando `crm_campaigns` con permisos owner/admin.
 - Pruebas: núcleo ampliado con consentimiento, QA de derechos, capacidad, señal de experimentos, embudo y máquina de estados; navegación visual autenticada validada con datos reales del CRM.
 - Pendiente externo real: OAuth/Insights/CAPI y creación remota PAUSED requieren backend Meta seguro, credenciales y revisión/aprobación correspondientes.
+
+### 2026-08-23 — Estado real documentado después de actualización
+
+- Producción canónica `https://crm.dcarelacompufoto.com/anuncios/` volvió a
+  responder HTTP 200; 29/29 pruebas continúan aprobadas.
+- `anuncios.dcarelacompufoto.com` todavía devuelve NXDOMAIN en 1.1.1.1. No se
+  declaró propagación ni HTTPS mientras el resolver siga sin el CNAME.
+- Se separó expresamente la persistencia: clientes/productos/campañas usan
+  Firestore; activos, capacidad, experimentos y atribución v4 permanecen en
+  almacenamiento local por sucursal hasta implementar colecciones y reglas.
+- OAuth, Insights, CAPI, publicación PAUSED y gasto Meta siguen sin existir y
+  bloqueados por diseño.
+- Documento rector: `ESTADO_REAL_PAGINA_ANUNCIOS_DCARELA_20260823.md`.

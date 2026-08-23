@@ -2,6 +2,9 @@
 
 SPA/PWA estática para planificar campañas de fotografía con datos reales del CRM y control humano. La URL canónica operativa sigue siendo `https://crm.dcarelacompufoto.com/anuncios/` mientras `anuncios.dcarelacompufoto.com` no tenga DNS y HTTPS válidos.
 
+Estado real, límites y próximas fases:
+`ESTADO_REAL_PAGINA_ANUNCIOS_DCARELA_20260823.md`.
+
 ## Alcance publicado
 
 - Firebase Authentication y membresía por `business_id`.
