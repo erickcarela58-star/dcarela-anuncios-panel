@@ -13,6 +13,8 @@ Estado real, límites y próximas fases:
 - Biblioteca versionada T01–T12.
 - Motor determinista de margen, CAC, capacidad y tres escenarios de presupuesto.
 - Registro de familias 4:5, 9:16 y 1:1 con QA de compatibilidad.
+- Taller creativo local que recorta sin deformar, ajusta el punto de foco,
+  compone texto/CTA y descarga tres JPG listos para revisión más un manifiesto QA.
 - Linter de atributos personales, escasez/prueba social, releases, HTTPS y precio.
 - Borradores compatibles con `crm_campaigns`, exportación TXT/JSON y constructor clásico.
 - Biblioteca operativa de activos con derechos, vigencia y QA para personas/menores.
@@ -26,7 +28,7 @@ Estado real, límites y próximas fases:
   con copia local de respaldo, migración idempotente y estados explícitos de
   permiso, cuota, sin conexión y sesión vencida.
 
-SaleAds no contiene tokens de Meta o IA, no activa anuncios, no aumenta presupuestos y no envía el banco de clientes a proveedores publicitarios o generativos.
+SaleAds no contiene tokens de Meta o IA, no activa anuncios, no aumenta presupuestos y no envía el banco de clientes a proveedores publicitarios o generativos. Las fotografías del taller se procesan en memoria en el dispositivo: no se suben a Firebase ni a Meta.
 
 ## Desarrollo y pruebas
 

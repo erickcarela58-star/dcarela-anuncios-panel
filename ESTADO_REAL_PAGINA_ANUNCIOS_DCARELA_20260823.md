@@ -1,6 +1,6 @@
 # Estado real de la página de anuncios D' Carela
 
-Fecha de verificación: 2026-08-23  
+Fecha de verificación: 2026-08-24
 Producto: SaleAds / Centro de Anuncios  
 Estado general: **publicado y utilizable para planificación comercial; todavía
 no es una plataforma de publicación automática en Meta**.
@@ -109,6 +109,21 @@ separado no resuelva.
   `APROBAR BORRADOR`.
 - Máquina de estados que bloquea publicación remota si no existe backend Meta.
 
+### Taller creativo local v6
+
+- Acepta únicamente JPG, PNG y WebP de hasta 30 MB.
+- Lee las dimensiones reales, permite mover el foco horizontal y vertical y
+  calcula recortes `cover` sin estirar ni deformar la fotografía.
+- Genera composiciones 1080×1350 (4:5), 1080×1920 (9:16) y 1080×1080 (1:1)
+  con zona segura visible en la previsualización.
+- La guía de zona segura no forma parte del JPG descargado.
+- Compone marca D' Carela, titular y CTA editables y descarga cada JPG por
+  separado junto a un manifiesto JSON de producción/QA.
+- El binario fuente se conserva solamente en memoria del navegador, se revoca
+  al cambiar de archivo o cerrar la página y no se sube a Firebase ni a Meta.
+- Todos los resultados siguen requiriendo revisión humana; generar una pieza
+  no aprueba, publica ni activa gasto.
+
 ## 4. Dónde se guardan hoy los datos
 
 | Información | Estado de persistencia actual |
@@ -167,7 +182,7 @@ Comando ejecutado:
 node --test ads-panel.test.js saleads-core.test.js
 ```
 
-Resultado actual: **38/38 aprobadas, 0 fallidas**.
+Resultado actual: **41/41 aprobadas, 0 fallidas**.
 
 Cobertura contractual:
 
@@ -190,6 +205,8 @@ Cobertura contractual:
 - mezcla que conserva lo local pendiente y marca lo confirmado;
 - estados explícitos de permiso, cuota, sin conexión y sesión vencida;
 - reglas `saleads_*` append-only por `business_id`, membresía y rol.
+- recorte multiformato sin deformación, validación de archivo y taller local
+  sin carga binaria a la nube.
 
 ## 7. Próximas fases recomendadas
 

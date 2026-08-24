@@ -76,3 +76,21 @@
   pendiente junto con la publicación de las reglas.
 - Siguiente paso: publicar reglas, QA autenticado en dos dispositivos y recién
   entonces avanzar a P1 (capacidad y atribución enlazadas al POS).
+
+### 2026-08-24 — Taller creativo multiformato v6
+
+- Fuente funcional: commit `a20fa095f55bc4041878243ef69d3722e308c095`.
+- Se incorporó un taller creativo realmente operativo dentro de la biblioteca:
+  carga JPG/PNG/WebP local, valida tamaño y dimensiones, permite mover el foco
+  y calcula recortes `cover` para 4:5, 9:16 y 1:1 sin deformar la fotografía.
+- Cada variante agrega marca, titular y CTA editables, muestra una guía de zona
+  segura que se excluye del resultado final y descarga un JPG individual.
+- El manifiesto JSON registra generador, formatos, recortes, zonas seguras y
+  bloqueos (`meta_publish_enabled=false`, `spend_enabled=false`).
+- Privacidad: el archivo se procesa exclusivamente en memoria, se revoca al
+  cambiar/cerrar y no se sube a Firebase, Storage, Meta ni un proveedor de IA.
+- QA: `node --test ads-panel.test.js saleads-core.test.js` → 41/41; análisis de
+  sintaxis ES module → exit 0; espejo `/anuncios/` comparado por SHA-256, 6/6
+  archivos idénticos antes de publicar.
+- Sigue pendiente por dependencia externa: publicar las reglas Firestore y
+  conectar Meta mediante backend OAuth seguro. Ninguna ruta actual gasta dinero.
