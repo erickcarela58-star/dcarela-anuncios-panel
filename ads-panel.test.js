@@ -121,3 +121,70 @@ test("la sincronizacion no borra ni sobreescribe datos de otras colecciones", ()
   for (const kind of ["saleads_assets", "saleads_capacity", "saleads_experiments", "saleads_attribution", "saleads_audit"])
     assert.ok(core.operationCollections[Object.keys(core.operationCollections).find((k) => core.operationCollections[k].collection === kind)], kind);
 });
+
+test("incluye IA estratégica local conectada a campaña, capacidad y atribución", () => {
+  assert.match(html, /id="viewAiLab"/);
+  for (const id of ["aiRecommendationForm", "aiCampaign", "aiAvailableSlots", "aiSpend", "aiRecommendationResult", "aiRecommendationHistory"])
+    assert.match(html, new RegExp(`id="${id}"`));
+  for (const fn of ["planStrategicRecommendation", "buildAiContext", "renderAiRecommendation", "fillAiFromCampaign"])
+    assert.ok(js.includes(fn), `falta ${fn}`);
+  assert.ok(js.includes("attributionEvents.filter"));
+  assert.ok(js.includes("capacitySummary"));
+});
+
+test("el cerebro no recibe PII ni ejecuta gasto o publicación", () => {
+  const context = core.buildAiContext({
+    service: "retratos",
+    clients: [{ name: "No debe salir", phone: "8090000000" }],
+    customer_email: "privado@example.com",
+    spend: 100,
+  });
+  const serialized = JSON.stringify(context);
+  assert.doesNotMatch(serialized, /No debe salir|8090000000|privado@example\.com/);
+  assert.equal(context.privacy, "aggregates_only_no_pii");
+  assert.deepEqual(context.allowed_actions, ["recommend", "draft"]);
+  for (const forbidden of ["activate", "publish", "increase_budget", "send_customer_data"])
+    assert.ok(context.forbidden_actions.includes(forbidden));
+  assert.doesNotMatch(js, /generativelanguage\.googleapis|openrouter\.ai|api\.openai\.com/);
+});
+
+test("toda recomendación muestra evidencia, caducidad y aprobación humana", () => {
+  const result = core.planStrategicRecommendation({
+    service: "retratos",
+    price: 5000,
+    variable_cost: 1000,
+    desired_profit_after_ads: 2000,
+    target_revenue_roas: 3,
+    available_slots: 4,
+    budget_total: 2500,
+    spend: 800,
+    qualified_leads: 20,
+    bookings: 12,
+    completed_sessions: 10,
+    evidence_verified: true,
+    window_days: 7,
+  });
+  assert.equal(result.validation.valid, true);
+  assert.equal(result.recommendation.requires_human_approval, true);
+  assert.ok(result.recommendation.evidence.length >= 2);
+  assert.ok(Date.parse(result.recommendation.expires_at));
+  assert.match(html, /aprobación humana obligatoria/i);
+  assert.match(js, /no se ejecutó ninguna acción/i);
+});
+
+test("el laboratorio experimental diseña dos brazos con una sola variable", () => {
+  for (const id of ["aiExperimentForm", "aiExperimentVariable", "aiExperimentMinimum", "aiExperimentCost", "aiExperimentDaily", "aiExperimentDays", "aiExperimentResult"])
+    assert.match(html, new RegExp(`id="${id}"`));
+  const plan = core.planExperiment({ variable: "creative", minimum_events: 20, expected_cost_per_event: 200, daily_budget: 1200, days: 7 });
+  assert.equal(plan.arms, 2);
+  assert.equal(plan.variable, "creative");
+  assert.equal(plan.required_budget, 8000);
+  assert.equal(plan.status, "ready_to_draft");
+});
+
+test("la memoria de IA es local, limitada y separada por sucursal", () => {
+  assert.ok(js.includes('const AI_MEMORY_KEY = "dcarela_saleads_ai_memory_v1"'));
+  assert.match(js, /aiMemoryStore\(\)\[selectedBusiness\(\)\]/);
+  assert.match(js, /\.slice\(0, 25\)/);
+  assert.doesNotMatch(js, /collection\(db, "saleads_ai/);
+});

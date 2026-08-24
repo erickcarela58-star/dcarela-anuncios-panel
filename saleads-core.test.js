@@ -190,3 +190,88 @@ test("la bitacora es append-only y sin datos personales del cliente", () => {
   assert.ok(entry.id.startsWith("audit_"));
   assert.equal(core.operationCollections.audit_entries.mode, "append_only");
 });
+
+test("el contexto de IA usa solo agregados y elimina PII aunque se la entreguen", () => {
+  const context = core.buildAiContext({
+    service: "Maternidad", price: 6000, variable_cost: 1500, spend: 2400,
+    qualified_leads: 12, bookings: 5, completed_sessions: 3,
+    client_name: "Persona privada", phone: "8490000000", conversation: "texto privado",
+  });
+  const serialized = JSON.stringify(context);
+  assert.equal(context.privacy, "aggregates_only_no_pii");
+  assert.equal(context.business_context.branch, "redacted-id");
+  assert.doesNotMatch(serialized, /Persona privada|8490000000|texto privado/);
+  assert.deepEqual(context.forbidden_actions, ["activate", "publish", "increase_budget", "send_customer_data"]);
+});
+
+test("la IA local declara datos insuficientes y nunca inventa impacto", () => {
+  const result = core.planStrategicRecommendation({
+    service: "birthday", price: 5000, variable_cost: 1000, available_slots: 5,
+    budget_total: 3000, spend: 0, completed_sessions: 0,
+    evidence_verified: true, now: "2026-08-24T12:00:00.000Z",
+  });
+  assert.equal(result.recommendation.action, "insufficient_data");
+  assert.deepEqual(result.recommendation.expected_effect, { low: null, mid: null, high: null, unit: "completed_sessions" });
+  assert.equal(result.recommendation.requires_human_approval, true);
+  assert.equal(result.validation.valid, true);
+});
+
+test("la IA propone pausa cuando no hay capacidad sin ejecutar ninguna accion", () => {
+  const result = core.planStrategicRecommendation({
+    service: "graduation", price: 5000, variable_cost: 1000, target_revenue_roas: 3,
+    available_slots: 0, budget_total: 3000, spend: 1600, qualified_leads: 10,
+    bookings: 4, completed_sessions: 3, evidence_verified: true,
+    now: "2026-08-24T12:00:00.000Z",
+  });
+  assert.equal(result.recommendation.action, "pause_proposal");
+  assert.match(result.recommendation.summary, /Proponer pausa/);
+  assert.equal(result.validation.valid, true);
+});
+
+test("la IA detecta fatiga y limita el cambio a un creativo", () => {
+  const result = core.planStrategicRecommendation({
+    service: "family", price: 6000, variable_cost: 1500, target_revenue_roas: 3,
+    available_slots: 4, budget_total: 5000, spend: 3000, qualified_leads: 14,
+    bookings: 6, completed_sessions: 4, frequency: 4.1, creative_age_days: 10,
+    evidence_verified: true, now: "2026-08-24T12:00:00.000Z",
+  });
+  assert.equal(result.recommendation.action, "new_creative");
+  assert.match(result.recommendation.rationale[0], /frecuencia/i);
+  assert.equal(result.validation.valid, true);
+});
+
+test("un aumento es solo propuesta, acotado por CAC y muestra util", () => {
+  const result = core.planStrategicRecommendation({
+    service: "corporate", price: 10000, variable_cost: 2000, desired_profit_after_ads: 3000,
+    target_revenue_roas: 2, available_slots: 8, budget_total: 10000, spend: 6000,
+    qualified_leads: 30, bookings: 16, completed_sessions: 12, frequency: 2,
+    creative_age_days: 8, window_days: 14, evidence_verified: true,
+    now: "2026-08-24T12:00:00.000Z",
+  });
+  assert.equal(result.recommendation.action, "budget_change_proposal");
+  assert.equal(result.recommendation.requires_human_approval, true);
+  assert.ok(result.recommendation.expected_effect.mid >= 0);
+  assert.equal(result.validation.valid, true);
+});
+
+test("el validador rechaza outputs generativos sin evidencia o con permiso de activacion", () => {
+  const invalid = core.validateAiRecommendation({
+    recommendation_id: "bad", action: "activate", summary: "Activa ya", rationale: [],
+    evidence: [], confidence: 2, expected_effect: {}, risks: [],
+    requires_human_approval: false, expires_at: "ayer", schema_version: 9,
+  });
+  assert.equal(invalid.valid, false);
+  assert.ok(invalid.errors.length >= 6);
+});
+
+test("el laboratorio experimental exige costo historico y dos brazos con señal", () => {
+  const missing = core.planExperiment({ minimum_events: 20, daily_budget: 500, days: 7 });
+  assert.equal(missing.status, "insufficient_data");
+  const limited = core.planExperiment({ variable: "copy", minimum_events: 20, expected_cost_per_event: 200, daily_budget: 500, days: 7 });
+  assert.equal(limited.arms, 2);
+  assert.equal(limited.required_budget, 8000);
+  assert.equal(limited.feasible, false);
+  const feasible = core.planExperiment({ variable: "copy", minimum_events: 20, expected_cost_per_event: 100, daily_budget: 600, days: 7 });
+  assert.equal(feasible.status, "ready_to_draft");
+  assert.equal(feasible.feasible, true);
+});
