@@ -275,3 +275,43 @@ test("el laboratorio experimental exige costo historico y dos brazos con señal"
   assert.equal(feasible.status, "ready_to_draft");
   assert.equal(feasible.feasible, true);
 });
+
+test("el siguiente paso traduce la recomendacion a trabajo sin ejecutar acciones", () => {
+  const creative = core.recommendationNextStep({ action: "new_creative" }, { campaign_id: "camp_1" });
+  assert.equal(creative.view, "creatives");
+  assert.equal(creative.executed, false);
+  assert.equal(creative.requires_human_approval, true);
+  const pause = core.recommendationNextStep({ action: "pause_proposal" }, { campaign_id: "camp_1" });
+  assert.equal(pause.view, "approvals");
+  const unknown = core.recommendationNextStep({ action: "activate" });
+  assert.equal(unknown.action, "insufficient_data");
+  assert.equal(unknown.view, "analytics");
+});
+
+test("el brief local exige oferta humana y hereda solo evidencia agregada", () => {
+  const planned = core.planStrategicRecommendation({
+    service: "retratos", price: 5000, variable_cost: 1000,
+    desired_profit_after_ads: 2000, target_revenue_roas: 3,
+    available_slots: 5, budget_total: 3000, spend: 1000,
+    qualified_leads: 20, bookings: 12, completed_sessions: 10,
+    evidence_verified: true, window_days: 7,
+  });
+  const blocked = core.draftCreativeBrief({ service: "retratos", offer: "Sesión con 10 fotos" }, planned.recommendation);
+  assert.equal(blocked.status, "insufficient_data");
+  const brief = core.draftCreativeBrief({
+    service: "retratos",
+    offer: "Sesión con 10 fotos retocadas",
+    offer_verified: true,
+    goal: "booking",
+    tone: "elegant",
+    destination: "whatsapp",
+    customer_phone: "8090000000",
+  }, planned.recommendation);
+  assert.equal(brief.status, "ready_for_human_review");
+  assert.equal(brief.publish_enabled, false);
+  assert.equal(brief.spend_enabled, false);
+  assert.equal(brief.headline_options.length, 3);
+  assert.match(brief.cta, /WhatsApp/);
+  assert.doesNotMatch(JSON.stringify(brief), /8090000000/);
+  assert.equal(brief.requires_human_approval, true);
+});

@@ -188,3 +188,30 @@ test("la memoria de IA es local, limitada y separada por sucursal", () => {
   assert.match(js, /\.slice\(0, 25\)/);
   assert.doesNotMatch(js, /collection\(db, "saleads_ai/);
 });
+
+test("el estudio IA v8 tiene jerarquia visual, preparación y estados accesibles", () => {
+  for (const id of ["aiReadiness", "aiReadinessBar", "aiReadinessLabel", "aiReadinessHint", "aiNextStep", "aiGenerateBrief", "aiBriefPanel"])
+    assert.match(html, new RegExp(`id="${id}"`));
+  assert.match(html, /aria-live="polite"/);
+  assert.match(css, /\.ai-dashboard-grid/);
+  assert.match(css, /\.ai-result-panel\s*\{[^}]*position:\s*sticky/s);
+  assert.match(css, /@media\s*\(max-width:\s*440px\)/);
+  assert.ok(js.includes("renderAiReadiness"));
+});
+
+test("la recomendación produce trabajo útil sin publicar ni cambiar gasto", () => {
+  for (const fn of ["recommendationNextStep", "prepareAiNextStep", "prefillWizardFromAi", "draftCreativeBrief", "generateAiBrief"])
+    assert.ok(js.includes(fn) || core[fn], `falta ${fn}`);
+  for (const id of ["aiOffer", "aiOfferVerified", "aiGoal", "aiTone", "aiDestination", "aiOpenStudio", "aiCopyBrief", "aiExportBrief"])
+    assert.match(html, new RegExp(`id="${id}"`));
+  assert.match(html, /Borradores solamente/);
+  assert.doesNotMatch(js, /publish_enabled\s*=\s*true|spend_enabled\s*=\s*true/);
+});
+
+test("el laboratorio v8 usa costo observado y memoria exportable", () => {
+  for (const id of ["aiExperimentMetric", "aiExperimentUseObserved", "aiExportHistory"])
+    assert.match(html, new RegExp(`id="${id}"`));
+  assert.match(js, /spend \/ count/);
+  assert.match(js, /business_id:\s*selectedBusiness\(\)/);
+  assert.match(css, /\.ai-experiment-meter/);
+});
