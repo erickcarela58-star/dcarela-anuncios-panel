@@ -16,7 +16,7 @@ import {
   where,
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-const BUILD = "2026-08-23-saleads-operations-v4";
+const BUILD = "2026-08-24-saleads-creative-studio-v6";
 const saleAds = window.SaleAdsCore;
 if (!saleAds) throw new Error("No se cargó el motor seguro de SaleAds.");
 const SALEADS_UI = new URLSearchParams(location.search).get("saleads_ui") === "classic" ? "classic" : "phase1";
@@ -60,6 +60,7 @@ let member = null,
   wizardTemplateId = "T01";
 const WIZARD_KEY = "dcarela_saleads_wizard_v3";
 const OPERATIONS_KEY = "dcarela_saleads_operations_v1";
+let studioSource = { file: null, image: null, objectUrl: "", plan: null };
 
 function operationStore() {
   try { return JSON.parse(localStorage.getItem(OPERATIONS_KEY) || "{}"); }
@@ -367,6 +368,175 @@ function renderCreativeSpecs() {
   $("creativeSpecGrid").innerHTML = saleAds.creativeSpecs.map((x) =>
     `<article class="spec-card"><span class="template-id">${escapeHtml(x.ratio)}</span><b>${escapeHtml(x.label)}</b><span>${x.width}×${x.height}</span><span>${escapeHtml(x.placements.join(" · "))}</span><small>Fuente registrada: Meta Ads Guide</small><small>Estado: requiere revalidación autenticada antes de publicar</small></article>`,
   ).join("");
+}
+
+function releaseStudioSource() {
+  if (studioSource.objectUrl) URL.revokeObjectURL(studioSource.objectUrl);
+  studioSource = { file: null, image: null, objectUrl: "", plan: null };
+}
+
+function loadStudioImage(file) {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => resolve({ file, image, objectUrl, plan: null });
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("La fotografía no pudo decodificarse."));
+    };
+    image.src = objectUrl;
+  });
+}
+
+function studioInput() {
+  const file = studioSource.file;
+  return {
+    name: clean($("assetName")?.value) || clean($("wizardService")?.value) || "creativo-dcarela",
+    source_width: studioSource.image?.naturalWidth || 0,
+    source_height: studioSource.image?.naturalHeight || 0,
+    size_bytes: file?.size || 0,
+    mime: file?.type || "",
+    focus_x: Number($("studioFocusX").value) / 100,
+    focus_y: Number($("studioFocusY").value) / 100,
+  };
+}
+
+function studioCopy() {
+  return {
+    headline: clean($("studioHeadline").value) || "Fotografía profesional D' Carela",
+    cta: clean($("studioCta").value) || "Reservar por WhatsApp",
+  };
+}
+
+function wrapCanvasText(context, text, maxWidth, maxLines = 3) {
+  const words = String(text || "").split(/\s+/).filter(Boolean);
+  const lines = [];
+  let current = "";
+  for (const word of words) {
+    const next = current ? `${current} ${word}` : word;
+    if (current && context.measureText(next).width > maxWidth) {
+      lines.push(current);
+      current = word;
+      if (lines.length === maxLines - 1) break;
+    } else current = next;
+  }
+  if (current && lines.length < maxLines) lines.push(current);
+  return lines;
+}
+
+function drawStudioCanvas(canvas, variant, showGuide) {
+  if (!studioSource.image) return;
+  const previewScale = showGuide ? Math.min(1, 360 / variant.height, 320 / variant.width) : 1;
+  canvas.width = Math.max(1, Math.round(variant.width * previewScale));
+  canvas.height = Math.max(1, Math.round(variant.height * previewScale));
+  const context = canvas.getContext("2d", { alpha: false });
+  const crop = variant.crop;
+  context.drawImage(studioSource.image, crop.x, crop.y, crop.width, crop.height, 0, 0, canvas.width, canvas.height);
+
+  const safe = variant.safe_zone;
+  const left = canvas.width * safe.left_pct / 100;
+  const right = canvas.width * (1 - safe.right_pct / 100);
+  const top = canvas.height * safe.top_pct / 100;
+  const bottom = canvas.height * (1 - safe.bottom_pct / 100);
+  const gradient = context.createLinearGradient(0, canvas.height * 0.35, 0, canvas.height);
+  gradient.addColorStop(0, "rgba(0,0,0,0)");
+  gradient.addColorStop(1, "rgba(0,0,0,.88)");
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  const copy = studioCopy();
+  const unit = Math.max(1, canvas.width / 1080);
+  context.fillStyle = "#ffffff";
+  context.font = `800 ${Math.round(38 * unit)}px Arial, sans-serif`;
+  context.fillText("D' CARELA COMPUFOTO", left, Math.max(top + 38 * unit, 44 * unit));
+  context.font = `800 ${Math.round(70 * unit)}px Arial, sans-serif`;
+  const lines = wrapCanvasText(context, copy.headline, Math.max(120, right - left), 3);
+  const lineHeight = 78 * unit;
+  const ctaHeight = 82 * unit;
+  let y = Math.max(top + 120 * unit, bottom - ctaHeight - lines.length * lineHeight - 28 * unit);
+  for (const line of lines) {
+    context.fillText(line, left, y);
+    y += lineHeight;
+  }
+  context.fillStyle = "#ff7a00";
+  context.beginPath();
+  context.roundRect(left, y + 10 * unit, Math.min(right - left, 520 * unit), ctaHeight, 18 * unit);
+  context.fill();
+  context.fillStyle = "#111111";
+  context.font = `800 ${Math.round(34 * unit)}px Arial, sans-serif`;
+  context.fillText(copy.cta, left + 28 * unit, y + 64 * unit);
+
+  if (showGuide) {
+    context.save();
+    context.setLineDash([10, 8]);
+    context.strokeStyle = "rgba(255,255,255,.85)";
+    context.lineWidth = Math.max(1, 3 * unit);
+    context.strokeRect(left, top, right - left, bottom - top);
+    context.restore();
+  }
+}
+
+function renderCreativeStudio() {
+  const preview = $("studioPreview");
+  const plan = studioSource.plan;
+  if (!plan || plan.blocked || !studioSource.image) {
+    preview.innerHTML = "";
+    $("studioManifest").disabled = true;
+    return;
+  }
+  preview.innerHTML = plan.variants.map((variant) =>
+    `<article class="studio-card"><div><b>${escapeHtml(variant.label)} · ${escapeHtml(variant.ratio)}</b><small>${variant.width}×${variant.height} · ${escapeHtml(variant.placements.join(" · "))}</small></div><canvas data-studio-canvas="${escapeHtml(variant.id)}" aria-label="Vista previa ${escapeHtml(variant.label)}"></canvas><button class="secondary" type="button" data-studio-download="${escapeHtml(variant.id)}">Descargar JPG</button></article>`,
+  ).join("");
+  for (const variant of plan.variants) {
+    const canvas = preview.querySelector(`[data-studio-canvas="${variant.id}"]`);
+    drawStudioCanvas(canvas, variant, true);
+  }
+  $("studioManifest").disabled = false;
+}
+
+function generateStudioPackage() {
+  if (!studioSource.image || !studioSource.file) {
+    $("studioStatus").textContent = "Selecciona primero una fotografía JPG, PNG o WebP.";
+    return;
+  }
+  const plan = saleAds.planCreativeVariants(studioInput());
+  studioSource.plan = plan;
+  const issues = plan.issues.map((issue) => `<div class="qa-item ${issue.severity === "block" ? "danger-text" : "warning-text"}">${escapeHtml(issue.message)}</div>`).join("");
+  $("studioStatus").innerHTML = plan.blocked
+    ? issues
+    : `<span class="success-text">Tres composiciones generadas en memoria. La línea punteada marca la zona segura y no aparece en la descarga.</span>${issues}`;
+  renderCreativeStudio();
+}
+
+async function downloadStudioVariant(id) {
+  const variant = studioSource.plan?.variants.find((row) => row.id === id);
+  if (!variant || !studioSource.image) return;
+  const canvas = document.createElement("canvas");
+  drawStudioCanvas(canvas, variant, false);
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.92));
+  if (!blob) throw new Error("El navegador no pudo generar el JPG.");
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = variant.file_name;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function downloadStudioManifest() {
+  if (!studioSource.plan || studioSource.plan.blocked) return;
+  const manifest = {
+    schema_version: 1,
+    generator: BUILD,
+    generated_at: new Date().toISOString(),
+    business_id: selectedBusiness(),
+    source_file_uploaded: false,
+    source_dimensions: { width: studioSource.image.naturalWidth, height: studioSource.image.naturalHeight },
+    copy: studioCopy(),
+    variants: studioSource.plan.variants,
+    qa: { human_review_required: true, meta_publish_enabled: false, spend_enabled: false },
+  };
+  download(JSON.stringify(manifest, null, 2), `saleads-paquete-${Date.now()}.json`, "application/json");
 }
 
 function renderBudgetResult(result) {
@@ -1135,6 +1305,27 @@ $("creative").onchange = () => {
   $("creativeName").textContent =
     $("creative").files[0]?.name || "Ningún archivo seleccionado";
 };
+$("studioFile").onchange = async () => {
+  const file = $("studioFile").files?.[0];
+  releaseStudioSource();
+  renderCreativeStudio();
+  if (!file) {
+    $("studioStatus").textContent = "Selecciona una fotografía autorizada. El archivo se procesa solamente en memoria.";
+    return;
+  }
+  try {
+    studioSource = await loadStudioImage(file);
+    if (!clean($("studioHeadline").value))
+      $("studioHeadline").value = clean($("wizardOffer").value) || clean($("product").value) || "Fotografía profesional D' Carela";
+    generateStudioPackage();
+  } catch (error) {
+    $("studioStatus").textContent = error.message || String(error);
+  }
+};
+$("studioGenerate").onclick = generateStudioPackage;
+$("studioManifest").onclick = downloadStudioManifest;
+for (const id of ["studioHeadline", "studioCta", "studioFocusX", "studioFocusY"])
+  $(id).addEventListener("input", () => { if (studioSource.image) generateStudioPackage(); });
 $("clientSearch").oninput = renderAudience;
 $("refreshHistory").onclick = () =>
   loadCampaigns().then(() => toast("Campañas actualizadas."));
@@ -1216,11 +1407,15 @@ document.addEventListener("click", (event) => {
   const target = event.target;
   if (target instanceof HTMLElement && target.hasAttribute("data-sync-retry"))
     loadOperationData().catch((error) => console.warn("operations-retry", error));
+  if (target instanceof HTMLElement && target.hasAttribute("data-studio-download"))
+    downloadStudioVariant(target.dataset.studioDownload)
+      .catch((error) => toast(error.message || String(error)));
 });
 window.addEventListener("online", () => loadOperationData().catch(() => {}));
 window.addEventListener("offline", () =>
   setSyncState("offline", "Sin conexión: los cambios nuevos quedan pendientes en este dispositivo."),
 );
+window.addEventListener("beforeunload", releaseStudioSource);
 document
   .querySelectorAll(".nav-item")
   .forEach((x) => (x.onclick = () => showView(x.dataset.view)));

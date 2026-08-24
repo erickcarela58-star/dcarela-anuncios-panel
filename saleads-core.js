@@ -124,6 +124,54 @@
     return { rows, missing, valid: rows.length > 0 && missing.length === 0 };
   }
 
+  function coverCrop(sourceWidth, sourceHeight, targetWidth, targetHeight, focusX = 0.5, focusY = 0.5) {
+    const sw = Math.max(1, n(sourceWidth));
+    const sh = Math.max(1, n(sourceHeight));
+    const tw = Math.max(1, n(targetWidth));
+    const th = Math.max(1, n(targetHeight));
+    const scale = Math.max(tw / sw, th / sh);
+    const width = Math.min(sw, tw / scale);
+    const height = Math.min(sh, th / scale);
+    const x = Math.max(0, Math.min(sw - width, clamp01(focusX) * sw - width / 2));
+    const y = Math.max(0, Math.min(sh - height, clamp01(focusY) * sh - height / 2));
+    return { x: round2(x), y: round2(y), width: round2(width), height: round2(height), scale: round2(scale) };
+  }
+
+  function planCreativeVariants(input = {}) {
+    const sourceWidth = Math.max(0, n(input.source_width));
+    const sourceHeight = Math.max(0, n(input.source_height));
+    const sizeBytes = Math.max(0, n(input.size_bytes));
+    const mime = String(input.mime || "").toLowerCase();
+    const issues = [];
+    if (!sourceWidth || !sourceHeight)
+      issues.push({ code: "image_dimensions", severity: "block", message: "No se pudieron leer las dimensiones de la fotografía." });
+    if (!["image/jpeg", "image/png", "image/webp"].includes(mime))
+      issues.push({ code: "image_mime", severity: "block", message: "Usa una fotografía JPG, PNG o WebP." });
+    if (sizeBytes > 30 * 1024 * 1024)
+      issues.push({ code: "image_size", severity: "block", message: "La fotografía supera el límite local de 30 MB." });
+
+    const baseName = slugKey(String(input.name || "creativo-dcarela")).slice(0, 48);
+    const variants = sourceWidth && sourceHeight
+      ? creativeSpecs.map((spec) => {
+          const safe = spec.safe_zone || { top_pct: 6, bottom_pct: 16, left_pct: 6, right_pct: 6 };
+          if (sourceWidth < spec.width || sourceHeight < spec.height)
+            issues.push({ code: `upscale_${spec.id}`, severity: "warning", message: `${spec.label}: la fuente es menor que ${spec.width}×${spec.height}; revisa nitidez al 100%.` });
+          return {
+            id: spec.id,
+            label: spec.label,
+            ratio: spec.ratio,
+            width: spec.width,
+            height: spec.height,
+            placements: [...spec.placements],
+            crop: coverCrop(sourceWidth, sourceHeight, spec.width, spec.height, input.focus_x, input.focus_y),
+            safe_zone: { ...safe },
+            file_name: `${baseName}-${spec.id}-${spec.width}x${spec.height}.jpg`,
+          };
+        })
+      : [];
+    return { variants, issues, blocked: issues.some((issue) => issue.severity === "block") };
+  }
+
   function consentState(client = {}) {
     const optedOut = client.marketing_opt_out === true || client.opt_out === true
       || client.consent_status === "revoked";
@@ -362,6 +410,7 @@
 
   return {
     templates, creativeSpecs, recommendTemplates, calculateBudget, lintPolicy, validatePlacements,
+    coverCrop, planCreativeVariants,
     consentState, summarizeAudience, validateCreativeAsset, capacitySummary, evaluateExperiment,
     funnelMetrics, campaignTransitions, canTransitionCampaign,
     operationCollections, operationDocId, mergeOperationRows, planOperationMigration,

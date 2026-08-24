@@ -56,6 +56,32 @@ test("registro creativo conserva fuente, fecha y estado de verificación", () =>
   assert.ok(core.creativeSpecs.every((x) => x.source.startsWith("https://") && x.verified_at && x.verification_status));
 });
 
+test("el taller calcula recortes sin deformar y conserva el foco", () => {
+  const crop = core.coverCrop(4000, 3000, 1080, 1920, 0.8, 0.5);
+  assert.equal(Math.round(crop.width / crop.height * 1000), Math.round(1080 / 1920 * 1000));
+  assert.ok(crop.x > 1500, "el foco horizontal debe mover el recorte hacia la derecha");
+  assert.ok(crop.x + crop.width <= 4000.01);
+  assert.ok(crop.y + crop.height <= 3000.01);
+});
+
+test("el taller genera tres formatos versionados y bloquea archivos inseguros", () => {
+  const plan = core.planCreativeVariants({
+    name: "Maternidad Agosto",
+    source_width: 4000,
+    source_height: 3000,
+    size_bytes: 4_000_000,
+    mime: "image/jpeg",
+    focus_x: 0.5,
+    focus_y: 0.45,
+  });
+  assert.equal(plan.blocked, false);
+  assert.deepEqual(plan.variants.map((x) => x.id), ["feed_portrait", "fullscreen_vertical", "marketplace_square"]);
+  assert.ok(plan.variants.every((x) => x.file_name.endsWith(".jpg") && x.safe_zone));
+  const bad = core.planCreativeVariants({ source_width: 0, source_height: 0, size_bytes: 31 * 1024 * 1024, mime: "application/pdf" });
+  assert.equal(bad.blocked, true);
+  assert.deepEqual(bad.issues.filter((x) => x.severity === "block").map((x) => x.code), ["image_dimensions", "image_mime", "image_size"]);
+});
+
 test("audiencia CRM solo considera exportable el consentimiento explicito vigente", () => {
   const result = core.summarizeAudience([
     { phone: "8495550101", marketing_consent: true },

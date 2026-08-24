@@ -13,7 +13,7 @@
     />
     <title>D'Carela · Centro de Anuncios</title>
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=20260823v5" />
+    <link rel="stylesheet" href="./styles.css?v=20260824v6" />
   </head>
   <body>
     <div class="login" id="login">
@@ -226,6 +226,19 @@
           <div class="section-hero compact-section"><div><span class="eyebrow">Biblioteca y QA por placement</span><h1>Creativos con derechos verificables</h1><p>Registra metadatos, permisos y familia visual. SaleAds bloquea usos sin autorización.</p></div></div>
           <div class="sync-banner" data-sync-banner id="syncBannerCreatives"><span class="status-chip muted-text">Sin sincronizar</span></div>
           <div class="spec-grid" id="creativeSpecGrid"></div>
+          <section class="panel creative-studio" aria-labelledby="creativeStudioTitle">
+            <div class="panel-heading section"><div><span>Taller local · la foto no sale del dispositivo</span><h3 id="creativeStudioTitle">Producir anuncio en 4:5, 9:16 y 1:1</h3></div><span class="status-chip success-text">Cero gasto</span></div>
+            <div class="studio-controls">
+              <label>Fotografía real<input id="studioFile" type="file" accept="image/jpeg,image/png,image/webp" /></label>
+              <label>Texto principal<input id="studioHeadline" maxlength="90" placeholder="Ej. Sesiones de maternidad con guía de poses" /></label>
+              <label>Acción<select id="studioCta"><option>Reservar por WhatsApp</option><option>Solicitar información</option><option>Ver paquetes disponibles</option><option>Agendar sesión</option></select></label>
+              <label>Foco horizontal<input id="studioFocusX" type="range" min="0" max="100" value="50" /></label>
+              <label>Foco vertical<input id="studioFocusY" type="range" min="0" max="100" value="50" /></label>
+            </div>
+            <div class="inline-actions studio-actions"><button class="primary" id="studioGenerate" type="button">Generar paquete visual</button><button class="secondary" id="studioManifest" type="button" disabled>Descargar manifiesto QA</button></div>
+            <div class="qa-box" id="studioStatus">Selecciona una fotografía autorizada. El archivo se procesa solamente en memoria y no se sube a Firebase ni a Meta.</div>
+            <div class="studio-preview-grid" id="studioPreview"></div>
+          </section>
           <div class="operations-grid">
             <form class="panel" id="creativeAssetForm">
               <div class="panel-heading section"><div><span>Activo nuevo</span><h3>Registro comercial</h3></div></div>
@@ -585,7 +598,7 @@
 
     <div class="toast" id="toast" role="status"></div>
     <script src="https://panel.dcarelacompufoto.com/firebase-config.js"></script>
-    <script src="./saleads-core.js?v=20260823v5"></script>
-    <script type="module" src="./app.js?v=20260823v5"></script>
+    <script src="./saleads-core.js?v=20260824v6"></script>
+    <script type="module" src="./app.js?v=20260824v6"></script>
   </body>
 </html>

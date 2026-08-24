@@ -68,6 +68,15 @@ test("incluye operaciones comerciales completas sin gasto automatico", () => {
   for (const fn of ["renderCapacity", "renderExperiments", "renderAnalytics", "registerApproval"])
     assert.ok(js.includes(`function ${fn}`) || js.includes(`async function ${fn}`));
 });
+test("incluye taller creativo local con tres formatos y descargas", () => {
+  for (const id of ["studioFile", "studioHeadline", "studioFocusX", "studioFocusY", "studioGenerate", "studioPreview", "studioManifest"])
+    assert.match(html, new RegExp(`id="${id}"`));
+  for (const fn of ["planCreativeVariants", "drawStudioCanvas", "downloadStudioVariant", "downloadStudioManifest"])
+    assert.ok(js.includes(fn), `falta ${fn}`);
+  assert.match(html, /la foto no sale del dispositivo/i);
+  assert.match(js, /source_file_uploaded:\s*false/);
+  assert.doesNotMatch(js, /uploadBytes|storage\.googleapis/);
+});
 test("protege datos CRM y consentimiento de audiencias", () => {
   assert.ok(js.includes("summarizeAudience"));
   assert.ok(js.includes("consentState"));
