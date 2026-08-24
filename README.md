@@ -21,11 +21,16 @@ Estado real, límites y próximas fases:
 - Audiencias CRM con consentimiento explícito, exclusiones y contactos enmascarados.
 - Calendario de capacidad real para cupos, reservas y disponibilidad vendible.
 - Experimentos control/variante con umbral mínimo y resultado `insufficient_data` cuando falta señal.
-- Cerebro estratégico local v7 conectado a campañas, capacidad y atribución
+- Cerebro estratégico local v8 conectado a campañas, capacidad y atribución
   agregada: recomienda mantener, preparar creativo, proponer pausa o evaluar
   presupuesto, con evidencia, confianza, riesgos, caducidad y aprobación humana.
 - Laboratorio A/B experimental que calcula dos brazos, eventos mínimos y
   presupuesto requerido sin declarar ganadores ni inventar impacto.
+- Estudio IA visual con medidor de preparación, secciones progresivas, decisión
+  fija, brief creativo basado únicamente en una oferta confirmada y rutas al
+  wizard, medición, capacidad, aprobaciones o taller sin ejecutar cambios.
+- Costo observado por métrica, memoria recuperable/exportable por sucursal y
+  traspaso de titular/CTA al taller creativo local.
 - Embudo manual verificable desde lead hasta venta pagada, sin inventar Insights ni ROAS.
 - Cola de QA y aprobación humana auditada; la aprobación local no publica ni activa Meta.
 - Colecciones compartidas por sucursal `saleads_assets`, `saleads_capacity`,
@@ -62,6 +67,6 @@ GitHub Pages publica `main`. Antes de push se deben ejecutar las pruebas, increm
   `permission-denied` y el panel trabaja con la copia local marcando pendientes.
 - Las dimensiones conservadoras de `creativeSpecs` tienen estado `baseline_requires_authenticated_recheck`: Meta bloqueó la verificación pública sin sesión; deben revalidarse antes de publicar un anuncio.
 - Insights y gasto remoto siguen vacíos hasta conectar Meta. El embudo propio acepta solamente eventos comerciales que el usuario registra como verificados.
-- La IA generativa remota no está conectada. El cerebro local v7 sí está activo
+- La IA generativa remota no está conectada. El cerebro local v8 sí está activo
   y es funcional, pero redactar con un modelo externo requiere implementar y
   desplegar el backend `/api/ai/*` sin exponer claves al frontend.

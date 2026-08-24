@@ -17,7 +17,7 @@ persiste localmente y lo que aún requiere backend, permisos o infraestructura.
 Verificación actual:
 
 - HTTPS respondió HTTP 200.
-- Documento v7 servido: 47,389 bytes.
+- Documento v8 servido: 51,240 bytes.
 - Título: `D'Carela · Centro de Anuncios`.
 - El JavaScript productivo respondió HTTP 200 y contiene los contratos de
   capacidad, experimentos, atribución, IA estratégica y aprobación humana.
@@ -49,8 +49,8 @@ CRM indicada arriba.
   `C:\tmp\DCARELA_POS_1_0_30_SUPERBLOQUE_20260805-045441\POS_DEV\scratchpad\github-dcarela-anuncios-panel`
 - Repositorio: `erickcarela58-star/dcarela-anuncios-panel`
 - Rama: `main`
-- Commit funcional verificado: `c2ed8d27f6586028afd3e5cd06d8a67bdf7047ec`
-- GitHub Pages run funcional: `32701464360`
+- Commit funcional verificado: `895e73c5913126e1f470ae8824df58f76b8b45e1`
+- GitHub Pages run funcional: `32704409031`
 - Conclusión: `success`
 
 ### Copia operativa publicada bajo el CRM
@@ -58,8 +58,8 @@ CRM indicada arriba.
 - Ruta local:
   `C:\tmp\DCARELA_POS_1_0_30_SUPERBLOQUE_20260805-045441\POS_DEV\scratchpad\github-dcarela-crm-panel\anuncios`
 - Repositorio: `erickcarela58-star/dcarela-crm-panel`
-- Commit funcional verificado: `1c26d16dab748fbcad620632b580c9f3f3863e29`
-- GitHub Pages run funcional: `32701568857`
+- Commit funcional verificado: `08eed598308b3356992277a2fa3811c14d09d1c8`
+- GitHub Pages run funcional: `32704502811`
 - Conclusión: `success`
 
 Las dos copias deben mantenerse idénticas. La aplicación independiente es la
@@ -148,6 +148,31 @@ separado no resuelva.
 - IA generativa remota continúa sin conectar: requiere backend seguro; ninguna
   clave ni llamada a OpenAI/Gemini/OpenRouter existe en el navegador.
 
+### Cierre estético y funcional IA Studio v8
+
+- La pantalla IA fue rediseñada como un estudio de decisiones: hero comercial,
+  cuatro controles visibles, formulario progresivo, preparación porcentual,
+  decisión sticky y zonas separadas de brief, experimento y memoria.
+- El formulario inicial bajó de 1,339 a 858 px al plegar economía/resultados;
+  el resultado permanece visible al desplazar. En 1280 px el documento midió
+  1,265 px, sin overflow horizontal.
+- El motor transforma la acción en un siguiente paso no ejecutable: medición,
+  calendario, aprobaciones, wizard o taller creativo. Traslada únicamente
+  economía/oferta verificadas y no guarda una campaña por sí solo.
+- `draftCreativeBrief` requiere oferta confirmada y recomendación válida. Su
+  salida contiene hipótesis, tres titulares, texto, CTA, dirección visual,
+  plan A/B, evidencia y restricciones; `publish_enabled=false` y
+  `spend_enabled=false` son obligatorios.
+- El laboratorio calcula costo por lead/reserva/sesión desde gasto agregado
+  verificado y muestra cobertura real del presupuesto. La memoria puede abrirse
+  y exportarse por sucursal sin contener clientes.
+- QA local autenticado: preparación 100%, recomendación `new_creative` por
+  frecuencia 4.2, brief listo, costo observado RD$400 por sesión, presupuesto
+  A/B insuficiente correctamente y titular/CTA cargados en el taller.
+- QA productivo autenticado: build v8, dos sucursales, 868 clientes, estados
+  vacíos correctos, recomendación insuficiente segura y brief bloqueado sin
+  oferta. Sin errores de consola, escrituras de campaña o gasto.
+
 ## 4. Dónde se guardan hoy los datos
 
 | Información | Estado de persistencia actual |
@@ -208,7 +233,7 @@ Comando ejecutado:
 node --test ads-panel.test.js saleads-core.test.js
 ```
 
-Resultado actual: **53/53 aprobadas, 0 fallidas**. Además, la regresión del
+Resultado actual: **58/58 aprobadas, 0 fallidas**. Además, la regresión del
 ecosistema pasó **297/297** pruebas .NET y **46/46** flujos integrales del POS
 sobre una copia temporal de la base real.
 

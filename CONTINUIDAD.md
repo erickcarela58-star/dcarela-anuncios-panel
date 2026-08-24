@@ -130,3 +130,29 @@
 - Pendiente externo sin disfrazar: backend IA generativa, Meta OAuth/Insights,
   reglas Firestore publicadas y CNAME `anuncios` todavía requieren
   infraestructura/credenciales separadas.
+
+### 2026-08-24 — Cierre estético y funcional IA Studio v8
+
+- Fuente funcional: `895e73c5913126e1f470ae8824df58f76b8b45e1`; Pages
+  `32704409031`, conclusión `success`.
+- Espejo canónico CRM: `08eed598308b3356992277a2fa3811c14d09d1c8`;
+  Pages `32704502811`, conclusión `success`.
+- Diseño: nuevo hero, barra de confianza, formulario por secciones plegables,
+  medidor de preparación, resultado sticky, jerarquía consistente, estados
+  vacíos y breakpoints 1180/760/440 sin scroll horizontal en 1280.
+- Flujo: cada decisión ofrece el siguiente paso correcto sin ejecutarlo. Una
+  propuesta puede abrir medición, capacidad, aprobaciones, wizard o taller y
+  solo traslada campos confirmados.
+- Brief seguro: requiere recomendación válida y oferta confirmada; produce tres
+  titulares, copy, hipótesis, CTA, dirección visual, experimento y restricciones.
+  Nunca habilita publicación/gasto y transfiere titular/CTA al taller local.
+- Laboratorio: toma costo observado por métrica verificada, muestra cobertura
+  de presupuesto y mantiene exactamente dos brazos/una variable.
+- Memoria: decisiones recuperables y exportables por sucursal; máximo 25,
+  contexto agregado sin clientes.
+- QA: 58/58 Node, sintaxis JS/SW exit 0, 297/297 POS y 46/46 integral. Navegador
+  local autenticado validó 100% de preparación, fatiga, brief, costo observado
+  y traspaso al taller sin errores de consola.
+- QA productivo autenticado: 2 sucursales, 868 clientes, build v8 visible,
+  `insufficient_data` correcto y brief bloqueado sin oferta; HTML/app/core/CSS/SW
+  HTTP 200. No se guardó campaña ni se activó gasto.
