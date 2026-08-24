@@ -17,10 +17,10 @@ persiste localmente y lo que aún requiere backend, permisos o infraestructura.
 Verificación actual:
 
 - HTTPS respondió HTTP 200.
-- Documento servido: 38,907 bytes.
+- Documento v7 servido: 47,389 bytes.
 - Título: `D'Carela · Centro de Anuncios`.
 - El JavaScript productivo respondió HTTP 200 y contiene los contratos de
-  capacidad, experimentos, atribución y aprobación humana.
+  capacidad, experimentos, atribución, IA estratégica y aprobación humana.
 
 ### Subdominio independiente
 
@@ -49,8 +49,8 @@ CRM indicada arriba.
   `C:\tmp\DCARELA_POS_1_0_30_SUPERBLOQUE_20260805-045441\POS_DEV\scratchpad\github-dcarela-anuncios-panel`
 - Repositorio: `erickcarela58-star/dcarela-anuncios-panel`
 - Rama: `main`
-- Commit funcional verificado: `745f468d765cf0df4cae7bb3a6e9245868ca2b33`
-- GitHub Pages run funcional: `32638786153`
+- Commit funcional verificado: `c2ed8d27f6586028afd3e5cd06d8a67bdf7047ec`
+- GitHub Pages run funcional: `32701464360`
 - Conclusión: `success`
 
 ### Copia operativa publicada bajo el CRM
@@ -58,8 +58,8 @@ CRM indicada arriba.
 - Ruta local:
   `C:\tmp\DCARELA_POS_1_0_30_SUPERBLOQUE_20260805-045441\POS_DEV\scratchpad\github-dcarela-crm-panel\anuncios`
 - Repositorio: `erickcarela58-star/dcarela-crm-panel`
-- Commit funcional verificado: `d7019dbd46c0d859700f42215b8114e84e534a93`
-- GitHub Pages run funcional: `32638816743`
+- Commit funcional verificado: `1c26d16dab748fbcad620632b580c9f3f3863e29`
+- GitHub Pages run funcional: `32701568857`
 - Conclusión: `success`
 
 Las dos copias deben mantenerse idénticas. La aplicación independiente es la
@@ -124,6 +124,30 @@ separado no resuelva.
 - Todos los resultados siguen requiriendo revisión humana; generar una pieza
   no aprueba, publica ni activa gasto.
 
+### IA estratégica y laboratorio v7
+
+- La vista `IA y laboratorio` está publicada y funciona con la sesión Firebase
+  y las dos sucursales reales.
+- Puede cargar una campaña y derivar únicamente su servicio, economía, eventos
+  atribuidos y capacidad. Gasto y frecuencia permanecen en cero hasta que el
+  operador los introduce y confirma como verificados.
+- La salida estricta incluye acción permitida, resumen, justificación,
+  evidencia con fuente/ventana, confianza, efecto esperado, riesgos, caducidad,
+  `schema_version` y `requires_human_approval=true`.
+- Acciones posibles: `keep`, `pause_proposal`, `new_creative`,
+  `budget_change_proposal` e `insufficient_data`. Ninguna ejecuta el cambio.
+- Si faltan gasto o sesiones verificadas devuelve `insufficient_data` y deja el
+  efecto esperado vacío; no convierte ausencia de datos en una promesa.
+- La memoria conserva hasta 25 resultados por sucursal en el dispositivo y no
+  contiene clientes, teléfonos, correos, chats ni fotografías.
+- El laboratorio A/B exige una sola variable, dos brazos, costo histórico y
+  eventos mínimos; calcula viabilidad y presupuesto, sin elegir un ganador.
+- QA autenticado en producción confirmó ambas sucursales, 868 clientes, la
+  recomendación segura de datos insuficientes y una muestra A/B viable de dos
+  brazos. No se guardó campaña, no se publicó anuncio y no se activó gasto.
+- IA generativa remota continúa sin conectar: requiere backend seguro; ninguna
+  clave ni llamada a OpenAI/Gemini/OpenRouter existe en el navegador.
+
 ## 4. Dónde se guardan hoy los datos
 
 | Información | Estado de persistencia actual |
@@ -137,6 +161,7 @@ separado no resuelva.
 | Experimentos v4 | `saleads_experiments` (append-only) + copia local |
 | Eventos de atribución v4 | `saleads_attribution` (append-only) + copia local, marcados `manual_verified` |
 | Auditoría de acciones v4 | `saleads_audit` (append-only) + copia local |
+| Memoria de recomendaciones IA v7 | Local por sucursal, máximo 25, contexto agregado sin PII |
 | Métricas/gasto Meta | No existen todavía; no se inventan |
 
 Las cinco colecciones `saleads_*` ya están implementadas en el panel con mezcla
@@ -166,7 +191,8 @@ Firestore con reglas y auditoría, sin borrar la compatibilidad local.
 - Atribución automática desde tickets, WhatsApp y CRM; hoy es manual y
   verificable.
 - ROAS, CPC, CPM, CTR o costo por sesión reales.
-- Generación con IA remota. El motor actual es determinista y no consume API.
+- Generación con IA remota. El cerebro estratégico local v7 sí funciona, pero
+  no consume una API externa ni expone secretos; falta el backend `/api/ai/*`.
 - Sincronización multidispositivo de creativos, capacidad, experimentos y
   atribución v4 **verificada en producción**: el código y las reglas existen,
   falta publicar las reglas y repetir el QA autenticado en dos dispositivos.
@@ -182,7 +208,9 @@ Comando ejecutado:
 node --test ads-panel.test.js saleads-core.test.js
 ```
 
-Resultado actual: **41/41 aprobadas, 0 fallidas**.
+Resultado actual: **53/53 aprobadas, 0 fallidas**. Además, la regresión del
+ecosistema pasó **297/297** pruebas .NET y **46/46** flujos integrales del POS
+sobre una copia temporal de la base real.
 
 Cobertura contractual:
 
@@ -207,6 +235,11 @@ Cobertura contractual:
 - reglas `saleads_*` append-only por `business_id`, membresía y rol.
 - recorte multiformato sin deformación, validación de archivo y taller local
   sin carga binaria a la nube.
+- contexto IA sin PII, salida estricta, evidencia, confianza, caducidad,
+  aprobación humana y bloqueo de acciones no permitidas;
+- escenarios de datos insuficientes, capacidad agotada, fatiga creativa y
+  propuesta de presupuesto sin ejecución;
+- laboratorio A/B de dos brazos con cálculo de viabilidad y muestra mínima.
 
 ## 7. Próximas fases recomendadas
 

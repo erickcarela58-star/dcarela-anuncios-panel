@@ -94,3 +94,39 @@
   archivos idénticos antes de publicar.
 - Sigue pendiente por dependencia externa: publicar las reglas Firestore y
   conectar Meta mediante backend OAuth seguro. Ninguna ruta actual gasta dinero.
+
+### 2026-08-24 — IA estratégica local y laboratorio experimental v7
+
+- Fuente funcional publicada: commit
+  `c2ed8d27f6586028afd3e5cd06d8a67bdf7047ec`; GitHub Pages run
+  `32701464360`, conclusión `success`.
+- Espejo canónico CRM: commit
+  `1c26d16dab748fbcad620632b580c9f3f3863e29`; GitHub Pages run
+  `32701568857`, conclusión `success`.
+- Se agregó la vista `IA y laboratorio`, conectada a campañas, economía,
+  capacidad y atribución agregada de la sucursal. El banco de clientes no entra
+  al contexto IA.
+- El cerebro local devuelve exclusivamente `keep`, `pause_proposal`,
+  `new_creative`, `budget_change_proposal` o `insufficient_data`, siempre con
+  evidencia, confianza, riesgos, vencimiento, esquema y aprobación humana.
+- Gasto y frecuencia nunca se infieren de Firestore: se mantienen en cero hasta
+  que el operador los carga y confirma. Las propuestas no publican, activan ni
+  cambian presupuestos.
+- La memoria es local, separada por sucursal y limitada a 25 resultados. El
+  contexto seguro y la recomendación estructurada pueden exportarse en JSON.
+- Función experimental añadida: diseñador A/B con dos brazos, una variable,
+  muestra mínima, costo histórico y presupuesto requerido/disponible.
+- Seguridad: sin claves o llamadas generativas en frontend. El contrato puede
+  validar en el futuro una salida remota, pero el proveedor externo exige
+  backend del lado servidor y continúa marcado como no configurado.
+- QA: 53/53 pruebas Node, sintaxis de `app.js` y `sw.js` exit 0; 297/297
+  unitarias .NET y 46/46 prueba integral del POS sobre copia temporal.
+- QA real autenticado en `https://crm.dcarelacompufoto.com/anuncios/`: dos
+  sucursales, 868 clientes, vista v7 visible, recomendación de datos
+  insuficientes correcta, evidencia visible, aprobación humana explícita y
+  cálculo A/B de dos brazos viable. Ancho 1280 sin scroll horizontal.
+- Validación HTTP: HTML, `app.js`, `saleads-core.js` y `sw.js` respondieron 200
+  con el build v7. No se guardó campaña ni se activó gasto durante QA.
+- Pendiente externo sin disfrazar: backend IA generativa, Meta OAuth/Insights,
+  reglas Firestore publicadas y CNAME `anuncios` todavía requieren
+  infraestructura/credenciales separadas.

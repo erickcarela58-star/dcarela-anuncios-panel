@@ -21,6 +21,11 @@ Estado real, límites y próximas fases:
 - Audiencias CRM con consentimiento explícito, exclusiones y contactos enmascarados.
 - Calendario de capacidad real para cupos, reservas y disponibilidad vendible.
 - Experimentos control/variante con umbral mínimo y resultado `insufficient_data` cuando falta señal.
+- Cerebro estratégico local v7 conectado a campañas, capacidad y atribución
+  agregada: recomienda mantener, preparar creativo, proponer pausa o evaluar
+  presupuesto, con evidencia, confianza, riesgos, caducidad y aprobación humana.
+- Laboratorio A/B experimental que calcula dos brazos, eventos mínimos y
+  presupuesto requerido sin declarar ganadores ni inventar impacto.
 - Embudo manual verificable desde lead hasta venta pagada, sin inventar Insights ni ROAS.
 - Cola de QA y aprobación humana auditada; la aprobación local no publica ni activa Meta.
 - Colecciones compartidas por sucursal `saleads_assets`, `saleads_capacity`,
@@ -29,6 +34,11 @@ Estado real, límites y próximas fases:
   permiso, cuota, sin conexión y sesión vencida.
 
 SaleAds no contiene tokens de Meta o IA, no activa anuncios, no aumenta presupuestos y no envía el banco de clientes a proveedores publicitarios o generativos. Las fotografías del taller se procesan en memoria en el dispositivo: no se suben a Firebase ni a Meta.
+
+La IA local solo recibe agregados y guarda hasta 25 recomendaciones por
+sucursal en el dispositivo. El contrato para un futuro proveedor remoto ya
+valida esquema, evidencia y acciones permitidas, pero no se conectará desde el
+navegador: requiere un backend seguro con secretos del lado servidor.
 
 ## Desarrollo y pruebas
 
@@ -52,3 +62,6 @@ GitHub Pages publica `main`. Antes de push se deben ejecutar las pruebas, increm
   `permission-denied` y el panel trabaja con la copia local marcando pendientes.
 - Las dimensiones conservadoras de `creativeSpecs` tienen estado `baseline_requires_authenticated_recheck`: Meta bloqueó la verificación pública sin sesión; deben revalidarse antes de publicar un anuncio.
 - Insights y gasto remoto siguen vacíos hasta conectar Meta. El embudo propio acepta solamente eventos comerciales que el usuario registra como verificados.
+- La IA generativa remota no está conectada. El cerebro local v7 sí está activo
+  y es funcional, pero redactar con un modelo externo requiere implementar y
+  desplegar el backend `/api/ai/*` sin exponer claves al frontend.
